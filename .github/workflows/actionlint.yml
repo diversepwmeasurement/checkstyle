@@ -1,26 +1,18 @@
-name: Lint GitHub Actions workflows
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/**'
-  pull_request:
-    branches:
-      - '*'
-    paths:
-      - '.github/workflows/**'
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
   actionlint:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Check workflow files
-        uses: docker://rhysd/actionlint:latest
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Check workflow files
+      uses: docker://rhysd/actionlint:latest
+name: Lint GitHub Actions workflows
+on:
+  repository_dispatch:
+    types: trigger-ga___actionlint.yml

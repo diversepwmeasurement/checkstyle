@@ -1,54 +1,45 @@
-#############################################################################
-# GitHub Action to Run Prepare goal of Maven Release plugin.
-#
-#############################################################################
-name: "R: Maven Prepare"
-run-name: "R: Maven Prepare ${{ inputs.version }}"
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'POM version without (-SNAPSHOT)'
-        required: true
-  workflow_call:
-    inputs:
-      version:
-        type: string
-        required: true
-
-permissions:
-  contents: write
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
   maven-prepare:
     name: Maven Prepare ${{ inputs.version }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout the latest code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: master
+    - continue-on-error: true
+      name: Checkout the latest code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: master
+    - continue-on-error: true
+      name: Setup local maven cache
+      uses: actions/cache@v4
+      with:
+        key: checkstyle-maven-cache-${{ hashFiles('**/pom.xml') }}
+        path: ~/.m2/repository
+    - continue-on-error: true
+      name: Commit and Push Credentials
+      run: 'git config user.name ''github-actions[bot]''
 
-      - name: Setup local maven cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: checkstyle-maven-cache-${{ hashFiles('**/pom.xml') }}
+        git config user.email ''github-actions[bot]@users.noreply.github.com''
 
-      - name: Commit and Push Credentials
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+        '
+    - continue-on-error: true
+      name: Run Shell Script
+      run: './.ci/release-maven-prepare.sh ${{ inputs.version }}
 
-      - name: Run Shell Script
-        run: |
-          ./.ci/release-maven-prepare.sh ${{ inputs.version }}
+        '
+    - continue-on-error: true
+      name: Push commit
+      run: 'git push origin master --tags
 
-      - name: Push commit
-        run: |
-          git push origin master --tags
+        '
+name: 'R: Maven Prepare'
+on:
+  repository_dispatch:
+    types: trigger-ga___release-maven-prepare.yml
+permissions:
+  contents: write
+run-name: 'R: Maven Prepare ${{ inputs.version }}'

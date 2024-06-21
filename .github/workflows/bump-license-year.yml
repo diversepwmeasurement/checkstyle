@@ -1,42 +1,42 @@
-#############################################################################
-# GitHub Action to bump license year
-#
-# Workflow starts every new year.
-#
-#############################################################################
-name: "Bump license year"
-on:
-  workflow_dispatch: null
-  schedule:
-    - cron: "0 0 1 1 *"
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
   bump:
     if: github.repository == 'checkstyle/checkstyle'
     name: Bump license year
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout the latest code
-        uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Checkout the latest code
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Set Current Year
+      run: 'echo "YEAR=$(date +''%Y'')" >> "$GITHUB_ENV"
 
-      - name: Set Current Year
-        run: |
-          echo "YEAR=$(date +'%Y')" >> "$GITHUB_ENV"
+        '
+    - continue-on-error: true
+      name: Modify Files
+      run: './.ci/bump-license-year.sh $(("${{ env.YEAR }}" - 1)) ${{ env.YEAR }}
+        .
 
-      - name: Modify Files
-        run: |
-          ./.ci/bump-license-year.sh $(("${{ env.YEAR }}" - 1)) ${{ env.YEAR }} .
+        '
+    - continue-on-error: true
+      name: Push commit
+      run: 'git config user.name ''github-actions[bot]''
 
-      - name: Push commit
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git commit -am "minor: Bump year to ${{ env.YEAR }}"
-          git push
+        git config user.email ''github-actions[bot]@users.noreply.github.com''
+
+        git commit -am "minor: Bump year to ${{ env.YEAR }}"
+
+        git push
+
+        '
+name: Bump license year
+on:
+  repository_dispatch:
+    types: trigger-ga___bump-license-year.yml
+permissions:
+  contents: write
+  pull-requests: write

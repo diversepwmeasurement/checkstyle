@@ -1,91 +1,68 @@
-#############################################################################
-# GitHub Action to run all phases of the release.
-#
-#############################################################################
-name: "R: Release"
-run-name: "R: Release ${{ inputs.version }}"
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'POM version without (-SNAPSHOT)'
-        required: true
-
 concurrency:
-  group: Caller-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: Caller-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
-  update-xdoc-with-releasenotes:
-    uses: ./.github/workflows/release-update-xdoc-with-releasenotes.yml
-    with:
-      version: ${{ inputs.version }}
-    permissions:
-      contents: write
-
-  maven-prepare:
-    uses: ./.github/workflows/release-maven-prepare.yml
-    needs: update-xdoc-with-releasenotes
-    with:
-      version: ${{ inputs.version }}
-    permissions:
-      contents: write
-
-  maven-perform:
-    uses: ./.github/workflows/release-maven-perform.yml
-    needs: maven-prepare
-    with:
-      version: ${{ inputs.version }}
+  copy-github-io-to-sourceforge:
+    needs: update-github-io
     secrets: inherit
+    uses: ./.github/workflows/release-copy-github-io-to-sourceforge.yml
+    with:
+      version: ${{ inputs.version }}
+  maven-perform:
+    needs: maven-prepare
     permissions:
       contents: read
-
-  update-github-page:
-    uses: ./.github/workflows/release-update-github-page.yml
-    needs: maven-perform
+    secrets: inherit
+    uses: ./.github/workflows/release-maven-perform.yml
     with:
       version: ${{ inputs.version }}
-    secrets: inherit
+  maven-prepare:
+    needs: update-xdoc-with-releasenotes
     permissions:
       contents: write
-
-  upload-all-jar:
-    uses: ./.github/workflows/release-upload-all-jar.yml
-    needs: update-github-page
+    uses: ./.github/workflows/release-maven-prepare.yml
     with:
       version: ${{ inputs.version }}
-    secrets: inherit
-    permissions:
-      contents: write
-
   new-milestone-and-issues-in-other-repos:
-    uses: ./.github/workflows/release-new-milestone-and-issues-in-other-repos.yml
     needs: update-github-page
-    with:
-      version: ${{ inputs.version }}
-    secrets: inherit
     permissions:
       contents: write
       issues: write
-
-  # until https://github.com/checkstyle/checkstyle/issues/13094
-  # publish-releasenotes-twitter:
-  #   uses: ./.github/workflows/release-publish-releasenotes-twitter.yml
-  #   needs: update-github-page
-  #   with:
-  #     version: ${{ inputs.version }}
-  #   secrets: inherit
-
+    secrets: inherit
+    uses: ./.github/workflows/release-new-milestone-and-issues-in-other-repos.yml
+    with:
+      version: ${{ inputs.version }}
   update-github-io:
-    uses: ./.github/workflows/release-update-github-io.yml
     needs: maven-perform
+    secrets: inherit
+    uses: ./.github/workflows/release-update-github-io.yml
     with:
       version: ${{ inputs.version }}
+  update-github-page:
+    needs: maven-perform
+    permissions:
+      contents: write
     secrets: inherit
-
-  copy-github-io-to-sourceforge:
-    uses: ./.github/workflows/release-copy-github-io-to-sourceforge.yml
-    needs: update-github-io
+    uses: ./.github/workflows/release-update-github-page.yml
     with:
       version: ${{ inputs.version }}
+  update-xdoc-with-releasenotes:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-update-xdoc-with-releasenotes.yml
+    with:
+      version: ${{ inputs.version }}
+  upload-all-jar:
+    needs: update-github-page
+    permissions:
+      contents: write
     secrets: inherit
+    uses: ./.github/workflows/release-upload-all-jar.yml
+    with:
+      version: ${{ inputs.version }}
+name: 'R: Release'
+on:
+  repository_dispatch:
+    types: trigger-ga___release.yml
+run-name: 'R: Release ${{ inputs.version }}'

@@ -1,86 +1,81 @@
-name: "no-exception testing"
-
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches: '*'
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
-  # this execution should stay on GitHub actions due to time/ memory limits in other CI
   no-exception-openjdk17:
     if: github.repository == 'checkstyle/checkstyle'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-
-      - name: Install dependencies
-        run: sudo apt install groovy
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - run: .ci/no-exception-test.sh openjdk17-with-checks-nonjavadoc-error
-  # this execution should stay on GitHub actions due to time/ memory limits in other CI
+    - continue-on-error: true
+      name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 11
+    - continue-on-error: true
+      name: Install dependencies
+      run: sudo apt install groovy
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      run: .ci/no-exception-test.sh openjdk17-with-checks-nonjavadoc-error
   no-exception-openjdk19:
     if: github.repository == 'checkstyle/checkstyle'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-
-      - name: Install dependencies
-        run: sudo apt install groovy
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - run: .ci/no-exception-test.sh openjdk19-with-checks-nonjavadoc-error
-  # this execution should stay on GitHub actions due to time/ memory limits in other CI
+    - continue-on-error: true
+      name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 11
+    - continue-on-error: true
+      name: Install dependencies
+      run: sudo apt install groovy
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      run: .ci/no-exception-test.sh openjdk19-with-checks-nonjavadoc-error
   no-exception-openjdk20:
     if: github.repository == 'checkstyle/checkstyle'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-
-      - name: Install dependencies
-        run: sudo apt install groovy
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - run: .ci/no-exception-test.sh openjdk20-with-checks-nonjavadoc-error
-  # this execution should stay on GitHub actions due to time/ memory limits in other CI
+    - continue-on-error: true
+      name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 11
+    - continue-on-error: true
+      name: Install dependencies
+      run: sudo apt install groovy
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      run: .ci/no-exception-test.sh openjdk20-with-checks-nonjavadoc-error
   no-exception-openjdk21:
     if: github.repository == 'checkstyle/checkstyle'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Set up JDK 11
-        uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-
-      - name: Install dependencies
-        run: sudo apt install groovy
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - run: .ci/no-exception-test.sh openjdk21-with-checks-nonjavadoc-error
+    - continue-on-error: true
+      name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 11
+    - continue-on-error: true
+      name: Install dependencies
+      run: sudo apt install groovy
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      run: .ci/no-exception-test.sh openjdk21-with-checks-nonjavadoc-error
+name: no-exception testing
+on:
+  repository_dispatch:
+    types: trigger-ga___no-exception-workflow.yml

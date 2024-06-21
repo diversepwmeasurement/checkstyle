@@ -1,63 +1,58 @@
-#############################################################################
-# GitHub Action to Run Perform goal of Maven Release plugin.
-#
-#############################################################################
-name: "R: Maven Perform"
-run-name: "R: Maven Perform ${{ inputs.version }}"
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'POM version without (-SNAPSHOT)'
-        required: true
-  workflow_call:
-    inputs:
-      version:
-        type: string
-        required: true
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
   maven-perform:
     name: Maven Perform ${{ inputs.version }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout the latest code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: master
+    - continue-on-error: true
+      name: Checkout the latest code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: master
+    - continue-on-error: true
+      name: Setup local maven cache
+      uses: actions/cache@v4
+      with:
+        key: checkstyle-maven-cache-${{ hashFiles('**/pom.xml') }}
+        path: ~/.m2/repository
+    - continue-on-error: true
+      env:
+        GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
+      name: Configure GPG
+      run: 'mkdir -p ~/.gnupg/
 
-      - name: Setup local maven cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: checkstyle-maven-cache-${{ hashFiles('**/pom.xml') }}
+        echo "$GPG_SECRET_KEY" > ~/.gnupg/private.key
 
-      - name: Configure GPG
-        env:
-          GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
-        run: |
-          mkdir -p ~/.gnupg/
-          echo "$GPG_SECRET_KEY" > ~/.gnupg/private.key
-          gpg --batch --import ~/.gnupg/private.key
-          chmod 600 ~/.gnupg/private.key
-          chmod 700 ~/.gnupg
+        gpg --batch --import ~/.gnupg/private.key
 
-      - name: Prepare release settings
-        env:
-          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
-          SONATYPE_PWD: ${{ secrets.SONATYPE_PWD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
-        run: |
-          ./.ci/release-create-maven-settings-xml.sh
+        chmod 600 ~/.gnupg/private.key
 
-      - name: Run Shell Script
-        env:
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
-        run: |
-          ./.ci/release-maven-perform.sh ${{ inputs.version }}
+        chmod 700 ~/.gnupg
+
+        '
+    - continue-on-error: true
+      env:
+        GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        SONATYPE_PWD: ${{ secrets.SONATYPE_PWD }}
+        SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+      name: Prepare release settings
+      run: './.ci/release-create-maven-settings-xml.sh
+
+        '
+    - continue-on-error: true
+      env:
+        REPOSITORY_OWNER: ${{ github.repository_owner }}
+      name: Run Shell Script
+      run: './.ci/release-maven-perform.sh ${{ inputs.version }}
+
+        '
+name: 'R: Maven Perform'
+on:
+  repository_dispatch:
+    types: trigger-ga___release-maven-perform.yml
+run-name: 'R: Maven Perform ${{ inputs.version }}'

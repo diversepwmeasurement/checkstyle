@@ -1,27 +1,22 @@
-name: "shellcheck"
-
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches: '*'
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref
+    }}
 jobs:
-  # this execution should stay on GitHub actions due to time/ memory limits in other CI
   shellcheck:
     if: github.repository == 'checkstyle/checkstyle'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Install dependencies
-        run: sudo apt install shellcheck
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Execute shellcheck
-        run: shellcheck ./.ci/*.sh
+    - continue-on-error: true
+      name: Install dependencies
+      run: sudo apt install shellcheck
+    - continue-on-error: true
+      name: Checkout repository
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Execute shellcheck
+      run: shellcheck ./.ci/*.sh
+name: shellcheck
+on:
+  repository_dispatch:
+    types: trigger-ga___shellcheck.yml

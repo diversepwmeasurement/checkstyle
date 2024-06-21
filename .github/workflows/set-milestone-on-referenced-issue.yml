@@ -1,32 +1,26 @@
-#############################################################################
-# GitHub action to set latest milestone on issue of merged PR.
-#
-#############################################################################
-name: 'Milestone issue closed by PR'
-
-on:
-  push:
-    branches:
-      - master
-
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
-permissions:
-  issues: write
-  pull-requests: write
-
+  group: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   set-milestone:
     if: github.repository == 'checkstyle/checkstyle'
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     steps:
-      - name: Checkout the latest code
-        uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Checkout the latest code
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      name: Set milestone on issue
+      run: './.ci/set-milestone-on-referenced-issue.sh ''${{ toJSON(github.event.commits)
+        }}''
 
-      - name: Set milestone on issue
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ./.ci/set-milestone-on-referenced-issue.sh '${{ toJSON(github.event.commits) }}'
+        '
+name: Milestone issue closed by PR
+on:
+  repository_dispatch:
+    types: trigger-ga___set-milestone-on-referenced-issue.yml
+permissions:
+  issues: write
+  pull-requests: write
